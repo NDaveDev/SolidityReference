@@ -431,7 +431,7 @@ contract CoinContract is Context, IERC20, Ownable {
     function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
         _approve(address(this), address(uniswapV2Router), tokenAmount);
 
-        (,uint256 ethFromLiquidity,) = uniswapV2Router.addLiquidityETH {value: ethAmount} (
+        uniswapV2Router.addLiquidityETH {value: ethAmount} (
             address(this),
             tokenAmount,
             0,
@@ -439,9 +439,6 @@ contract CoinContract is Context, IERC20, Ownable {
             liquidityReceiver,
             block.timestamp
         );
-        
-        if (ethAmount - ethFromLiquidity > 0)
-            swapETHForExternalTokens(ethAmount - ethFromLiquidity);
     }
 
     function _buyFee() private{
