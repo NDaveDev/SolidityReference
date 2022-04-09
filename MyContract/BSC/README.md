@@ -1,1 +1,2 @@
-// Will Add BSC Contract Here later
+# BSC - Binance Smart Chain
+I will add BSC contract here
