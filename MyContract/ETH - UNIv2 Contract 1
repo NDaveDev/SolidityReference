@@ -1,18 +1,18 @@
-// Liquidity Fee, Burn, Other Token Burn
-// Max Wallet, Max Tx, Max Sell
-// Remove ETH, Remove ERC20 Token with Deployer Wallet
-// Audit Standard - High Priority
+// Liquidity Fee, Burn, Other Token Burn                        //
+// Max Wallet, Max Tx, Max Sell                                 //
+// Remove ETH, Remove ERC20 Token with Deployer Wallet          //
+// Audit Standard - High Priority                               //
+//////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////
-// SPDX-License-Identifier: Apache2//
-/////////////////////////////////////
+// SPDX-License-Identifier: MIT
+
 /**
 
 Lorem Ipsum
 
 */
 
-pragma solidity ^0.8.6;
+pragma solidity ^0.8.13;
 
 interface IERC20 {
 
@@ -314,9 +314,11 @@ contract CoinContract is Context, IERC20, Ownable {
         buyFee.externalBurn= newExternalBurnFee;
     }
 
-    function setSellFees(uint256 newMarketingFee, uint256 newLiquidityFee) public onlyOwner {
-        require(newMarketingFee + newLiquidityFee <= 25, "Can't set sellFee above 25%");
+    function setSellFees(uint256 newLiquidityFee, uint256 newSelfBurnFee, uint256 newExternalBurnFee) public onlyOwner {
+        require(newLiquidityFee <= 25, "Can't set sellFee above 25%");
         sellFee.liquidity = newLiquidityFee;
+        sellFee.selfBurn = newSelfBurnFee;
+        sellFee.externalBurn= newExternalBurnFee;
     }
 
     function setMaxTxPercent(uint256 newMaxTxPercent) public onlyOwner {
@@ -397,8 +399,7 @@ contract CoinContract is Context, IERC20, Ownable {
 
     }
 
-    function swapTokensForEth(uint256 tokenAmount) private returns (uint256) {
-        uint256 initialBalance = address(this).balance;
+    function swapTokensForEth(uint256 tokenAmount) private {
         address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = uniswapV2Router.WETH();
@@ -412,7 +413,6 @@ contract CoinContract is Context, IERC20, Ownable {
             address(this),
             block.timestamp
         );
-        return (address(this).balance - initialBalance);
     }
 
     function swapETHForExternalTokens(uint256 amount) private {
