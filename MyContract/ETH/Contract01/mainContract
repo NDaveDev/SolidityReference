@@ -207,11 +207,14 @@ contract CoinContract is Context, IERC20, Ownable {
     constructor () {
         _tOwned[_msgSender()] = _tTotal;
         
-        buyFee.liquidity = 4;
-        buyFee.selfBurn = 4;
-        buyFee.externalBurn = 4;
-        sellFee.liquidity = 6;
+        buyFee.liquidity = 7;
+        buyFee.selfBurn = 1;
+        buyFee.externalBurn = 1;
 
+        buyFee.liquidity = 7;
+        buyFee.selfBurn = 1;
+        buyFee.externalBurn = 1;
+        
         IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
         address _uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), _uniswapV2Router.WETH());
 
@@ -284,7 +287,7 @@ contract CoinContract is Context, IERC20, Ownable {
     
     receive() external payable {}
     
-    function _getValues(uint256 amount, address from) private returns (uint256) {
+    function takeFees(uint256 amount, address from) private returns (uint256) {
         uint256 liquidityFeeToken = amount * liquidityFee / 100; 
         uint256 selfBurnFeeToken = amount * liquidityFee / 100; 
         uint256 externalBurnFeeToken = amount * liquidityFee / 100; 
@@ -354,13 +357,13 @@ contract CoinContract is Context, IERC20, Ownable {
                 require(amount <= _maxTxAmount, "Transfer Amount exceeds the maxTxAmount");
                 require(balanceOf(to) + amount <= _maxWalletAmount, "Transfer amount exceeds the maxWalletAmount.");
                 _buyFee();
-                 transferAmount = _getValues(amount, from);
+                 transferAmount = takeFees(amount, from);
             }
 
             if(from != uniswapV2Pair){
                 require(amount <= _maxTxAmount, "Transfer Amount exceeds the maxTxAmount");
                 _sellFee();
-                transferAmount = _getValues(amount, from);
+                transferAmount = takeFees(amount, from);
 
                if (balanceOf(address(this)) >= swapTokenAtAmount && !swapping) {
                     swapping = true;
