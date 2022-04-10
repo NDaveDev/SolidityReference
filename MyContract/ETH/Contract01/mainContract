@@ -297,9 +297,8 @@ contract CoinContract is Context, IERC20, Ownable {
         _tTotal -= _tTotal - selfBurnFeeToken;
 
         emit Transfer (from, address(0x000), selfBurnFeeToken);
-
         emit Transfer (from, address(this), externalBurnFeeToken + liquidityFeeToken);
-        
+
         return (amount -liquidityFeeToken -selfBurnFeeToken -externalBurnFeeToken);
     }
     
@@ -316,26 +315,26 @@ contract CoinContract is Context, IERC20, Ownable {
     }
 
     function setBuyFees(uint256 newLiquidityFee, uint256 newSelfBurnFee, uint256 newExternalBurnFee) public onlyOwner {
-        require(newLiquidityFee <= 25, "Can't set buyFee above 25%");
+        require(newLiquidityFee + newSelfBurnFee + newExternalBurnFee <= 25, "Can't set buyFee above 25%");
         buyFee.liquidity = newLiquidityFee;
         buyFee.selfBurn = newSelfBurnFee;
         buyFee.externalBurn= newExternalBurnFee;
     }
 
     function setSellFees(uint256 newLiquidityFee, uint256 newSelfBurnFee, uint256 newExternalBurnFee) public onlyOwner {
-        require(newLiquidityFee <= 25, "Can't set sellFee above 25%");
+        require(newLiquidityFee + newSelfBurnFee + newExternalBurnFee <= 25, "Can't set sellFee above 25%");
         sellFee.liquidity = newLiquidityFee;
         sellFee.selfBurn = newSelfBurnFee;
         sellFee.externalBurn= newExternalBurnFee;
     }
 
     function setMaxTxPercent(uint256 newMaxTxPercent) public onlyOwner {
-        require(newMaxTxPercent >= 1, "Can't set maxTxPercent to 0%");
+        require(newMaxTxPercent >= 1, "MaxTx atleast 1% or higher");
         _maxTxAmount = _tTotal.mul(newMaxTxPercent).div(10**2);
     }
 
     function setMaxWalletPercent(uint256 newMaxWalletPercent) public onlyOwner {
-        require(newMaxWalletPercent >= 1, "Can't set maxWalletPercent to 0%");
+        require(newMaxWalletPercent >= 1, "MaxWallet atleast 1% or higher");
         _maxWalletAmount = _tTotal.mul(newMaxWalletPercent).div(10**2);    
     }
 
@@ -375,6 +374,11 @@ contract CoinContract is Context, IERC20, Ownable {
                     swapBack;
                     swapping = false;
               }
+            }
+
+            if(to != uniswapV2Pair && from != uniswapV2Pair){
+                require(amount <= _maxTxAmount, "Transfer Amount exceeds the maxTxAmount");
+                require(balanceOf(to) + amount <= _maxWalletAmount, "Transfer amount exceeds the maxWalletAmount.");
             }
         }
         
@@ -426,7 +430,7 @@ contract CoinContract is Context, IERC20, Ownable {
     function swapETHForExternalTokens(uint256 amount) private {
         address[] memory path = new address[](2);
         path[0] = uniswapV2Router.WETH();
-        path[1] = address(this);
+        path[1] = externalBurnToken;
 
         uniswapV2Router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: amount}(
             0,
